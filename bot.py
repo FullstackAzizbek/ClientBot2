@@ -104,7 +104,7 @@ user_commands = [
 ]
 
 
-admins = [6004455264]
+admins = [6004455264,1908438933]
 @command_router.message(CommandStart())
 async def start_handler(message: Message):
     if message.from_user.id in admins:
