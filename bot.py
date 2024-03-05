@@ -37,15 +37,15 @@ class Database:
         self.cursor = self.conn.cursor()
     
 
-    def add_user(self, name, lname, age, adres, phone, image, owner_id, day, times):
+    def add_user(self, name, lname, age, adres, phone, owner_id, day, times):
         self.cursor.execute(
-            "INSERT INTO pupils (phone, f_name, l_name, image, age, adress, owner, day, times) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);", (phone, name, lname, image, age, adres, owner_id, day, times)
+            "INSERT INTO pupils (phone, f_name, l_name, age, adress, owner, day, times) VALUES (?, ?, ?, ?, ?, ?, ?, ?);", (phone, name, lname,age, adres, owner_id, day, times)
         )
         self.conn.commit()
 
     def get_users(self):
         self.cursor.execute(
-            "SELECT f_name, l_name, age, adress, phone, image, day, times, owner FROM pupils ORDER BY id;"
+            "SELECT f_name, l_name, age, adress, phone, image, day, times, owner FROM pupils;"
         )        
         result = self.cursor.fetchall()
         return result
@@ -146,9 +146,9 @@ async def users_handler(message: Message):
         users = db.get_users()
         if len(users) >= 1:
             for user in users:
-                await message.answer_photo(
-                    photo=user[5],
-                    caption=f"\n👤  To'liq ismi: <b>{user[0]} {user[1]}</b>\n👥  Yoshi: {user[2]}\n\n📆  Kun: {user[6]}\n⏰  Vaqt: {user[7]}\n\n📍 Manzil: {user[3]}\n📲  Telefon raqami: {user[4]}\n\n"
+                await message.answer(
+                    # photo=user[5],
+                    text=f"\n👤  To'liq ismi: <b>{user[0]} {user[1]}</b>\n👥  Yoshi: {user[2]}\n\n📆  Kun: {user[6]}\n⏰  Vaqt: {user[7]}\n\n📍 Manzil: {user[3]}\n📲  Telefon raqami: {user[4]}\n\n"
                 )
         else:
             await message.answer(
@@ -165,7 +165,6 @@ async def register_handler(message: Message, state: FSMContext):
     if user_tel not in admins:
         res = db.check_user(user_tel)
         if res:
-            
             await message.answer(text="Hurmatli foydalanuvchi, siz allaqachon ro'yhatdan o'tgansiz. Iltimos adminlarimiz javobini kuting.")
         else:
             await message.answer(
@@ -174,6 +173,7 @@ async def register_handler(message: Message, state: FSMContext):
             await state.set_state(PupilStates.first_name_state)
     else:
         await message.answer(text='Hurmatli admin, siz bu buyruqdan foydalana olmaysiz ❌❌❌')
+
 @pupil_router.message(PupilStates.first_name_state)
 async def first_name_handler(message: Message, state: FSMContext):
     await state.update_data(name = message.text)
@@ -262,20 +262,10 @@ async def day_handler(message: Message, state: FSMContext):
 @pupil_router.message(PupilStates.time_state)
 async def time_handler(message: Message, state: FSMContext):
     await state.update_data(time = message.text)
-    await state.set_state(PupilStates.image_state)
-    await message.answer(
-        text="Yaxshi, iltimos rasmingizni kiriting...",
-        reply_markup=ReplyKeyboardRemove()
-    )
-
-@pupil_router.message(PupilStates.image_state)
-async def image_handler(message: Message, state: FSMContext):
-    await state.update_data(image = message.photo[-1].file_id)
     all_data = await state.get_data()
-    if message.photo:
-        await message.answer_photo(
-            photo=all_data.get('image'),
-            caption=f"Ismi: <b>{all_data.get('name')}</b>\nFamiliyasi: {all_data.get('lname')}\nYoshi: {all_data.get('age')}\nManzil: {all_data.get('adres')}\nTelefon raqami: {all_data.get('phone')}\nKurs vaqti: {all_data.get('time')}\nKun: {all_data.get('day')}"
+    if message.text:
+        await message.answer(
+            text=f"Ismi: <b>{all_data.get('name')}</b>\nFamiliyasi: {all_data.get('lname')}\nYoshi: {all_data.get('age')}\nManzil: {all_data.get('adres')}\nTelefon raqami: {all_data.get('phone')}\nKurs vaqti: {all_data.get('time')}\nKun: {all_data.get('day')}"
         )
         all_data = await state.get_data()
         db.add_user(
@@ -284,7 +274,6 @@ async def image_handler(message: Message, state: FSMContext):
             age=all_data.get('age'),
             phone=str(all_data.get('phone')),
             adres=all_data.get('adres'),
-            image=all_data.get('image'),
             times=all_data.get('time'),
             day=all_data.get('day'),
             owner_id=message.from_user.id 
@@ -292,7 +281,9 @@ async def image_handler(message: Message, state: FSMContext):
         await message.answer("Muvaffaqqiyatli yuborildi", parse_mode=ParseMode.HTML)
         await state.clear()
     else:
-        await message.answer("Iltimos, rasm yuboring.")
+        await message.answer("Yaxshi, iltimos o'zingizga maqul vaqtni tanlang..")
+        await state.set_state(PupilStates.time_state)
+
 
 adver_router = Router()
 
