@@ -10,7 +10,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
 db = 'markaz.db'
-BOT_TOKEN = "7193192692:AAHR7UXgo6zkstuKsZLhi6WlRZ3Mh1Wlr2U"
+BOT_TOKEN = "7193192692:AAH94BxtEIgqZDXNDmPfSODfSiYPBdHAXtI"
 
 
 
